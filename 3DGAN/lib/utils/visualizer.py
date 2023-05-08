@@ -90,12 +90,31 @@ def add_3D_image(tensor, max_image):
   :return:
   '''
   c, h, w = tensor.size()
+  # print(tensor.size()) # 128,128,128
+  images = []
+  
   if c <= max_image:
-    images = [tensor[i:i+1] for i in range(c)]
+    images += [tensor[i:i+1] for i in range(c)]
   else:
     skip_len = float(c) / max_image
-    images = [tensor[int(i*skip_len):(int(i*skip_len) + 1)] for i in range(max_image)]
+    images += [tensor[int(i*skip_len):(int(i*skip_len) + 1)] for i in range(max_image)]
+  # print(images[-1].shape) # 1,128,128
+  
+  if h <= max_image:
+    images += [tensor[:,i:i+1] for i in range(h)]
+  else:
+    skip_len = float(h) / max_image
+    images += [tensor[:,int(i*skip_len):(int(i*skip_len) + 1)].movedim(1,0) for i in range(max_image)]
+  # print(images[-1].shape)
+  
+  if w <= max_image:
+    images += [tensor[:,:,i:i+1] for i in range(w)]
+  else:
+    skip_len = float(w) / max_image
+    images += [tensor[:,:,int(i*skip_len):(int(i*skip_len) + 1)].movedim(-1,0) for i in range(max_image)]
+  # print(images[-1].shape)
 
+  # print("len(images)",len(images)) # 150
   return images
 
 def tensor_back_to_unnormalization(input_image, mean, std):

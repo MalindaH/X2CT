@@ -48,8 +48,9 @@ def savepng(filename, direction):
 
 
 if __name__ == '__main__':
-    root_path = 'D:/LIDC_TEST/'
-    save_root_path = 'D:/LIDC_TEST'
+    # root_path = 'D:/LIDC_TEST/'
+    root_path = "~/scratch/lh9998/MSD_CT/Task06_Lung/imagesTr/"
+    save_root_path = "~/scratch/lh9998/MSD_CT/Task06_Lung/xraysTr/"
     plasti_path = 'D:/Program Files/Plastimatch/bin'
     
     files_list = os.listdir(root_path)

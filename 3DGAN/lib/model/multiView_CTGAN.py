@@ -111,7 +111,10 @@ class CTGAN(Base_Model):
     self.criterionGAN = GANLoss(use_lsgan=True).to(self.device)
 
     # identity loss
-    self.criterionIdt = RestructionLoss(opt.idt_loss, opt.idt_reduction).to(self.device)
+    # if opt.idt_loss == 'perceptual':
+    #   self.criterionIdt = RestructionLoss(opt.idt_loss, opt.idt_reduction)
+    # else:
+    self.criterionIdt = RestructionLoss(opt.idt_loss, opt.idt_reduction, self.gpu_ids).to(self.device)
 
     # feature metric loss
     self.criterionFea = torch.nn.L1Loss().to(self.device)
@@ -325,6 +328,7 @@ class CTGAN(Base_Model):
         loss_idt[mask] = loss_idt[mask] * idt_weight
         self.loss_idt = loss_idt.mean() * idt_lambda
       else:
+        # self.loss_idt = self.criterionIdt(self.G_fake_D, self.G_real_D).to(self.device) * idt_lambda
         self.loss_idt = self.criterionIdt(self.G_fake_D, self.G_real_D) * idt_lambda
 
     D_real_pred = self.netD(real_input)
