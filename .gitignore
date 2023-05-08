@@ -104,7 +104,7 @@ venv.bak/
 .mypy_cache/
 
 
-slurm-*
-log_pretrained_lidc.log
-save_models/
-multiview/
+3DGAN/slurm-*
+3DGAN/log_pretrained_lidc.log
+3DGAN/save_models/
+3DGAN/multiview/
