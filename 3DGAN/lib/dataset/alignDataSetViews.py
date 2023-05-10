@@ -96,19 +96,15 @@ class AlignDataSet(Base_DataSet):
     if self.dir_root.endswith("LIDC-HDF5-256"):
       file_path = self.get_image_path(self.dir_root, self.dataset_paths[item])
       ct_data, x_ray1, x_ray2 = self.load_file(file_path)
-      
       # Data Augmentation
       ct, xray1, xray2 = self.data_augmentation([ct_data, x_ray1, x_ray2])
-      
       return ct, xray1, xray2, file_path
-    else:
+    
+    else: ## for MSD_CT dataset
       ct_path, xray_path_front, xray_path_side = self.get_ct_path(self.dir_root, self.dataset_paths[item])
       ct_data, x_ray1, x_ray2 = self.load_images(ct_path, xray_path_front, xray_path_side)
-
       # Data Augmentation
       ct, xray1, xray2 = self.data_augmentation([ct_data, x_ray1, x_ray2])
-
-    # return ct, xray1, xray2, file_path
       return ct, xray1, xray2, ct_path
 
 

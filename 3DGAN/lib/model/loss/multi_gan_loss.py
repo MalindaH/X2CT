@@ -156,21 +156,13 @@ class RestructionLoss(nn.Module):
       self.loss = nn.L1Loss(reduction=reduction)
     elif distance == 'mse':
       self.loss = nn.MSELoss(reduction=reduction)
-    elif distance == 'perceptual': # 3d perceptual loss: Euclidean distance between feature vector from pre-trained VGG19
-      # self.vgg = torchvision.models.vgg19(pretrained=True)
-      # self.vgg.classifier = nn.Sequential(*[self.vgg.classifier[0]])
-      # # first_conv_layer = [nn.Conv2d(1, 3, kernel_size=3, stride=1, padding=1, dilation=1, groups=1, bias=True)]
-      # # first_conv_layer.extend(list(self.vgg.features))  
-      # # self.vgg.features= nn.Sequential(*first_conv_layer)  
-      # self.vgg.eval()
-      # # print(self.vgg) # classifier one linear layer: 25088 -> 4096
-      # # self.loss = None
+    elif distance == 'perceptual': # 3d perceptual loss: L1 distance between feature vectors from pre-trained VGG19
       self.loss = VGGPerceptualLoss(resize=False)
-      if len(gpu_ids) > 0:
-        assert (torch.cuda.is_available())
-        print("gpu_ids:",gpu_ids)
-        self.loss.to(gpu_ids[0])
-        self.loss = torch.nn.DataParallel(self.loss, gpu_ids)
+      # if len(gpu_ids) > 0:
+      #   assert (torch.cuda.is_available())
+      #   print("gpu_ids:",gpu_ids)
+      #   self.loss.to(gpu_ids[0])
+      #   self.loss = torch.nn.DataParallel(self.loss, gpu_ids)
       self.mseloss = nn.MSELoss(reduction=reduction)
     elif distance == 'perceptual_lpips':
       self.loss_fn_vgg = lpips.LPIPS(net='vgg')
@@ -179,47 +171,21 @@ class RestructionLoss(nn.Module):
   
   def perceptual_loss(self, gt, pred): # 3d perceptual loss
     assert gt.shape == pred.shape
-    # gt = gt.to('cpu')
-    # pred = pred.to('cpu')
     i=0
     slice1 = gt[:,:,i,:]
     slice2 = pred[:,:,i,:]
-    # slice1 = gt[:,:,i,:].expand(-1, 3, -1,-1)
-    # slice2 = pred[:,:,i,:].expand(-1, 3, -1,-1)
-    # slice1 = self.vgg(slice1)
-    # slice2 = self.vgg(slice2) # 4,4096
-    # loss = torch.sqrt(torch.sum((slice1-slice2)**2))
     loss = self.loss(slice1, slice2)
-    # print("1",loss)
     for i in range(1,gt.shape[2]):
-    # for i in range(gt.shape[2]):
       slice1 = gt[:,:,i,:]
       slice2 = pred[:,:,i,:]
-      # slice1 = gt[:,:,i,:].expand(-1, 3, -1,-1)
-      # slice2 = pred[:,:,i,:].expand(-1, 3, -1,-1) # [4, 1, 128, 128] -> [4, 3, 128, 128]
-      # slice1 = self.vgg(slice1)
-      # slice2 = self.vgg(slice2) # [4, 4096]
-      # loss += torch.sqrt(torch.sum((slice1-slice2)**2))
       loss += self.loss(slice1, slice2)
-    # print("2",loss)
     for i in range(gt.shape[3]):
       slice1 = gt[:,:,:,i,:]
       slice2 = pred[:,:,:,i,:]
-      # slice1 = slice1.expand(-1, 3, -1, -1)
-      # slice2 = slice2.expand(-1, 3, -1, -1)
-      # slice1 = self.vgg(slice1)
-      # slice2 = self.vgg(slice2)
-      # loss += torch.sqrt(torch.sum((slice1-slice2)**2))
       loss += self.loss(slice1, slice2)
-    # print("3",loss)
     for i in range(gt.shape[4]):
       slice1 = gt[:,:,:,:,i]
       slice2 = pred[:,:,:,:,i]
-      # slice1 = slice1.expand(-1, 3, -1,-1)
-      # slice2 = slice2.expand(-1, 3, -1,-1)
-      # slice1 = self.vgg(slice1)
-      # slice2 = self.vgg(slice2)
-      # loss += torch.sqrt(torch.sum((slice1-slice2)**2))
       loss += self.loss(slice1, slice2)
     loss = torch.sum(loss)
     loss /= gt.shape[2]*gt.shape[3]*gt.shape[4]
@@ -229,21 +195,13 @@ class RestructionLoss(nn.Module):
 
   def perceptual_loss_lpips(self, gt, pred): # 3d perceptual loss
     assert gt.shape == pred.shape
-    # print(torch.min(gt), torch.max(gt))
-    # print(torch.min(pred), torch.max(pred))
     gt1 = nn.functional.normalize(gt, dim=2)
     pred1 = nn.functional.normalize(pred, dim=2)
-    # print(torch.min(gt1), torch.max(gt1))
-    # print(torch.min(pred1), torch.max(pred1))
     i=0
     slice1 = gt1[:,:,i,:].expand(-1, 3, -1,-1)
     slice2 = pred1[:,:,i,:].expand(-1, 3, -1,-1)
     loss = self.loss_fn_vgg(slice1, slice2)
-    # slice1 = self.vgg(slice1)
-    # slice2 = self.vgg(slice2) # 4,4096
-    # loss = torch.sqrt(torch.sum((slice1-slice2)**2))
     for i in range(1,gt.shape[2]):
-    # for i in range(gt.shape[2]):
       slice1 = gt1[:,:,i,:].expand(-1, 3, -1,-1)
       slice2 = pred1[:,:,i,:].expand(-1, 3, -1,-1) # [4, 1, 128, 128] -> [4, 3, 128, 128]
       loss += self.loss_fn_vgg(slice1, slice2)
@@ -272,23 +230,15 @@ class RestructionLoss(nn.Module):
       return self.loss(gt, pred)
   
 
-
+## for testing
 if __name__ == '__main__':
   device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
   print(device)
-  # criterionIdt = RestructionLoss('perceptual', 'elementwise_mean').to(device)
-  criterionIdt = RestructionLoss('perceptual_lpips', 'elementwise_mean').to(device)
+  criterionIdt = RestructionLoss('perceptual', 'mean').to(device)
+  # criterionIdt = RestructionLoss('perceptual_lpips', 'mean').to(device)
   G_fake_D = torch.rand(1,1,128,128,128).to(device)
   G_real_D = torch.rand(1,1,128,128,128).to(device)
   G_fake_D *= 128
   G_real_D *= 128
-  # G_fake_D = torch.tensor([[[ 1,  2,  3],
-  #        [ 4,  5,  6]],
-  #       [[ 7,  8,  9],
-  #        [10, 11, 12]]], dtype=torch.float32)
-  # G_real_D = torch.tensor([[[ 1,  2,  3],
-  #        [ 4,  5,  6]],
-  #       [[ 7,  8,  9],
-  #        [10, 11, 12]]], dtype=torch.float32)
   loss_idt = criterionIdt(G_fake_D, G_real_D)
   print(loss_idt)
