@@ -262,7 +262,7 @@ class RestructionLoss(nn.Module):
     return loss[0,0,0,0]
 
   def forward(self, gt, pred):
-    # print("gt.shape, pred.shape: ",gt.shape, pred.shape) # batch_size,1,128,128,128
+    print("gt.shape, pred.shape: ",gt.shape, pred.shape) # batch_size,1,128,128,128
     if self.distance == 'perceptual': # 3d perceptual loss
       print("mse loss:",self.mseloss(gt, pred))
       return self.perceptual_loss(gt, pred)
