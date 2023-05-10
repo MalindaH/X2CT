@@ -1,3 +1,15 @@
+# Reconstructing High-Resolution CT from Biplanar X-Rays using GAN
+## COS 526 Neural Rendering Project
+```
+cd 3DGAN/
+sbatch train_notes_lidc.sh
+```
+
+
+
+
+The following is the README of the original repository:
+
 # X2CT-GAN: Reconstructing CT from Biplanar X-Rays with Generative Adversarial Networks
 
 ## Introduction
